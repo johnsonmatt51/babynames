@@ -54,7 +54,7 @@ public class NameController {
 
         final List<String> result = listOfNames.stream()
                 .filter(n -> n.getGender().equals(sex))
-                .filter(n -> n.getName().startsWith(start))
+                .filter(n -> n.getName().toLowerCase().startsWith(start.toLowerCase()))
                 .filter(n -> n.getName().length() == length)
                 .map(Name::getName)
                 .toList();
