@@ -4,9 +4,11 @@ import ch.zhaw.babynames.model.Name;
 import com.opencsv.CSVReader;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.Reader;
 import java.nio.file.Files;
@@ -14,7 +16,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.OK;
 
 @RestController
 public class NameController {
@@ -40,13 +45,21 @@ public class NameController {
     }
 
     @GetMapping("/names/name")
-    public List<String> getNames(@RequestParam() String sex, @RequestParam() String start, @RequestParam() long length) {
-        return listOfNames.stream()
+    public ResponseEntity<List<String>> getNames(@RequestParam() String sex,
+                                                 @RequestParam() String start,
+                                                 @RequestParam() long length) {
+        if (!Objects.equals(sex, "w") && !Objects.equals(sex, "m")) {
+            throw new ResponseStatusException(BAD_REQUEST);
+        }
+
+        final List<String> result = listOfNames.stream()
                 .filter(n -> n.getGender().equals(sex))
                 .filter(n -> n.getName().startsWith(start))
                 .filter(n -> n.getName().length() == length)
                 .map(Name::getName)
-                .collect(Collectors.toList());
+                .toList();
+
+        return new ResponseEntity<>(result, OK);
     }
 
     @EventListener(ApplicationReadyEvent.class)
